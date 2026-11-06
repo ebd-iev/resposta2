@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>A Bíblia tem muitas interpretações ou um único significado?</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #FBBF24;
+    --text-main: #FFFFFF;
+    --text-muted: #E2E8F0;
+    --bg-dark: #000000;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+  body {
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    color: var(--text-main);
+  }
+  .deck {
+    position: relative;
+    width: 100vw;
+    height: 100dvh;
+    max-width: 450px;
+    aspect-ratio: 9/16;
+    background: var(--bg-dark);
+    overflow: hidden;
+  }
+  @media (max-aspect-ratio: 9/16) {
+    .deck { max-width: 100%; aspect-ratio: auto; }
+  }
+  
+  /* Progress Bar */
+  .progress-container {
+    position: absolute;
+    top: max(15px, env(safe-area-inset-top));
+    left: 10px;
+    right: 10px;
+    display: flex;
+    gap: 4px;
+    z-index: 20;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #fff;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+  .progress-bar.dark-mode { background: rgba(0,0,0,0.15); }
+  .progress-bar.dark-mode .progress-fill { background: #000; }
+
+  /* Tap Zones */
+  .tap-left { position: absolute; left: 0; top: 0; width: 35%; height: 100%; z-index: 15; cursor: pointer; }
+  .tap-right { position: absolute; right: 0; top: 0; width: 65%; height: 100%; z-index: 15; cursor: pointer; }
+
+  /* Slides */
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 40px 24px calc(40px + env(safe-area-inset-bottom));
+    opacity: 0;
+    transform: scale(0.97);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    background-size: cover;
+    background-position: center;
+  }
+  
+  /* OVERLAY DE ALTO CONTRASTE */
+  .slide::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.98) 100%);
+    z-index: 1;
+  }
+  .slide.active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+  
+  /* Typography & Layout */
+  .content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .slide-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    color: var(--gold);
+    border: 2px solid var(--gold);
+  }
+  .slide-icon svg { width: 32px; height: 32px; stroke-width: 2.5; }
+
+  .kicker { font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: var(--gold); }
+  .number { display: inline-block; font-size: 15px; font-weight: 900; color: #000; background: var(--gold); letter-spacing: 2px; padding: 6px 14px; border-radius: 8px; align-self: flex-start; margin-bottom: 4px; text-transform: uppercase; }
+  
+  h1 { font-size: clamp(34px, 9vw, 44px); font-weight: 900; line-height: 1.1; letter-spacing: -1px; text-transform: uppercase; color: #FFF; }
+  h2 { font-size: clamp(30px, 8vw, 38px); font-weight: 900; line-height: 1.2; letter-spacing: -0.5px; color: #FFF; }
+  
+  /* CORPO DO TEXTO AUMENTADO (Fonte e Entrelinhas) */
+  p { font-size: 20px; line-height: 1.6; font-weight: 500; color: var(--text-muted); }
+  
+  .lead { font-size: 24px; font-weight: 700; color: var(--text-main); line-height: 1.4; }
+  .gold { color: var(--gold); }
+  .rule { width: 60px; height: 6px; background: var(--gold); border-radius: 3px; margin: 4px 0; }
+  
+  .quote { border-left: 6px solid var(--gold); padding-left: 20px; font-size: 24px; font-style: italic; font-weight: 700; color: #fff; line-height: 1.4; }
+  .small { font-size: 16px; opacity: 0.9; font-weight: 600; }
+  
+  .points { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+  .point { display: flex; gap: 16px; align-items: flex-start; font-size: 20px; font-weight: 600; color: #fff; line-height: 1.4; }
+  .dot { flex: 0 0 32px; height: 32px; border-radius: 16px; background: var(--gold); color: #000; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; margin-top: 2px; }
+  
+  .callout { padding: 24px; background: rgba(255,255,255,0.1); border-left: 6px solid var(--gold); border-radius: 0 16px 16px 0; backdrop-filter: blur(12px); margin-top: 8px; }
+  .callout p { color: #fff; font-weight: 700; font-size: 22px; margin: 0; }
+  
+  /* TELA FINAL */
+  .slide.final-slide-white { background-color: #FFFFFF !important; background-image: none !important; color: #000; }
+  .slide.final-slide-white::before { display: none; }
+  .final-slide-white .content { align-items: center; text-align: center; justify-content: center; height: 100%; padding-bottom: 15%; }
+  .final-slide-white .slide-icon { background: transparent; border: none; color: #000; width: 80px; height: 80px; margin-bottom: 16px; }
+  .final-slide-white .slide-icon svg { width: 64px; height: 64px; stroke-width: 2.5; }
+  .final-slide-white .final-title { font-size: 38px; font-weight: 900; color: #000; line-height: 1.1; margin-bottom: 8px; }
+  .final-slide-white .final-subtitle { font-size: 22px; font-weight: 900; color: #D97706; text-transform: uppercase; letter-spacing: 1px; }
+  .final-slide-white .final-details { margin-top: 48px; display: flex; flex-direction: column; gap: 20px; width: 100%; }
+  .final-slide-white .detail-item { font-size: 20px; font-weight: 700; color: #334155; display: flex; align-items: center; justify-content: center; gap: 12px; }
+  .final-slide-white .detail-item svg { stroke: #64748B; width: 28px; height: 28px; }
+  .final-slide-white .btn-final { margin-top: 48px; background: #000; color: #FFFFFF; font-weight: 900; padding: 20px 48px; border-radius: 40px; font-size: 18px; letter-spacing: 1.5px; text-transform: uppercase; text-decoration: none; display: inline-block; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+</style>
+</head>
+<body>
+
+<main class="deck" id="deck">
+  <div class="progress-container" id="progress-container"></div>
+  <div class="tap-left" id="tap-left" aria-label="Voltar"></div>
+  <div class="tap-right" id="tap-right" aria-label="Avançar"></div>
+
+  <!-- Slide 01 -->
+  <section class="slide active" style="background-image: url('https://segredosdomundo.r7.com/wp-content/uploads/2020/08/novo-testamento-como-surgiram-os-27-livros-da-segunda-parte-da-biblia-4.jpg')">
+    <div class="content">
+      <div class="slide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+      </div>
+      <div class="kicker">EBD · Classe Doutrina</div>
+      <h1>A BÍBLIA TEM MUITAS INTERPRETAÇÕES OU <span class="gold">UM ÚNICO SIGNIFICADO?</span></h1>
+      <div class="rule"></div>
+      <p class="lead">Como lidar com as diferenças de interpretação entre cristãos?</p>
+    </div>
+  </section>
+
+  <!-- Slide 02 -->
+  <section class="slide" style="background-image: url('https://opopular.com.br/image/policy:1.3274681:1777486734/image.jpg?&f=3x2')">
+    <div class="content">
+      <div class="slide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+      </div>
+      <div class="kicker">Uma afirmação para pensar</div>
+      <div class="quote">"Se dermos um mesmo versículo para dez pessoas pregarem, teremos dez explicações diferentes."</div>
+      <p>Afinal, a verdade bíblica depende da opinião de cada pessoa?</p>
+      <div class="callout"><p class="gold">Se Deus é verdadeiro, sua Palavra também é verdadeira.</p></div>
+    </div>
+  </section>
+
+  <!-- Slide 03 -->
+  <section class="slide" style="background-image: url('https://s2-galileu.glbimg.com/ts74puh6au3Lco4nCtoVAcw_ALc=/0x0:1024x640/888x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_fde5cd494fb04473a83fa5fd57ad4542/internal_photos/bs/2026/Y/R/nr5gM6QsWFGSzB7ftfTw/rotolo-di-isaia-1024x640.webp')">
+    <div class="content">
+      <div class="slide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+      </div>
+      <div class="number">01</div>
+      <h2>A Bíblia não significa aquilo que cada pessoa deseja.</h2>
+      <p>Não somos nós que determinamos o significado das Escrituras.</p>
+      <p>A Bíblia é a Palavra de Deus, revelada por meio de autores humanos em contextos históricos específicos.</p>
+      <div class="callout"><p class="gold">Cada passagem precisa ser compreendida à luz da mensagem comunicada em seu contexto original.</p></div>
+    </div>
+  </section>
+
+  <!-- Slide 04 -->
+  <section class="slide" style="background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxblEBhwRALBWiDdFssuA4jwuINoYYQLQ0ONWA1vWwpSOa9wBcwxqYA9Tp&s=10')">
+    <div class="content">
+      <div class="slide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </div>
+      <div class="kicker">A pergunta fundamental</div>
+      <p>Não basta perguntar: <br/><em>"O que este versículo significa para mim?"</em></p>
+      <h2 class="gold">"O que Deus está comunicando por meio deste texto?"</h2>
+      <p>Experiências e aplicações podem variar; elas não podem alterar o significado daquilo que Deus revelou.</p>
+    </div>
+  </section>
+
+  <!-- Slide 05 -->
+  <section class="slide" style="background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ4eEsQe9dfJclqiL2N9Q7niNt6s-NCLWfovKt6R9DGdQ2Z_xt8pwd8BKU&s=10')">
+    <div class="content">
+      <div class="slide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </div>
+      <div class="number">02</div>
+      <h2>Por que há tantas divergências?</h2>
+      <p>Porque todos nós somos limitados.</p>
+      <div class="points">
+        <div class="point"><div class="dot">1</div><span>Desconhecemos o contexto da passagem.</span></div>
+        <div class="point"><div class="dot">2</div><span>Ignoramos o sentido de palavras importantes.</span></div>
+        <div class="point"><div class="dot">3</div><span>Desconsideramos o que vem antes e depois.</span></div>
+        <div class="point"><div class="dot">4</div><span>Nossas próprias ideias influenciam a leitura.</span></div>
+      </div>
+      <div class="callout"><p class="gold">Sinceridade é importante, mas não torna ninguém infalível.</p></div>
+    </div>
+  </section>
+
+  <!-- Slide 06 -->
+  <section class="slide" style="background-image: url('https://img.magnific.com/fotos-gratis/um-antigas-biblia-ligado-um-tabela-madeira_53876-32346.jpg?semt=ais_hybrid&w=740&q=80')">
+    <div class="content">
+      <div class="slide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="3" x2="12" y2="21"></line><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path><path d="M12 9H7"></path><path d="M12 15h5"></path></svg>
+      </div>
+      <div class="kicker">Análise cuidadosa</div>
+      <h2>Dois cristãos sinceros podem discordar.</h2>
+      <p>Mas não devemos concluir automaticamente que ambos estão certos.</p>
+      <p>Precisamos examinar os argumentos e verificar qual interpretação encontra maior sustentação no próprio texto bíblico.</p>
+      <div class="quote">A sinceridade não substitui a avaliação criteriosa das Escrituras.</div>
+    </div>
+  </section>
+
+  <!-- Slide 07 -->
+  <section class="slide" style="background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSwrGBU02I0956YPyhQSB4fkVEmZUrEgdU_sk30Bc90Lc_S8BveGzmsAp9&s=10')">
+    <div class="content">
+      <div class="slide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      </div>
+      <div class="number">03</div>
+      <h2>Hermenêutica gramático-histórica</h2>
+      <p>O nome é técnico, mas o princípio é simples: interpretar a Bíblia considerando a gramática, o contexto histórico e o contexto literário da passagem.</p>
+      <div class="rule"></div>
+      <p class="lead gold">O texto deve ser compreendido no contexto em que foi escrito e na mensagem que comunica.</p>
+    </div>
+  </section>
+
+  <!-- Slide 08 -->
+  <section class="slide" style="background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-Cey7VA1bvwqC0zuLwlvblznFx2oni3CuY2F3vId2_vcnaHbdn5nOcuQ&s=10')">
+    <div class="content">
+      <div class="slide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </div>
+      <div class="kicker">Perguntas que ajudam</div>
+      <h2>Como observar o contexto?</h2>
+      <div class="points">
+        <div class="point"><div class="dot">✓</div><span>Quem escreveu e para quem?</span></div>
+        <div class="point"><div class="dot">✓</div><span>Em quais circunstâncias?</span></div>
+        <div class="point"><div class="dot">✓</div><span>Qual assunto estava sendo tratado?</span></div>
+        <div class="point"><div class="dot">✓</div><span>O que vem antes e depois do versículo?</span></div>
+        <div class="point"><div class="dot">✓</div><span>Como se relaciona com o resto das Escrituras?</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 09 -->
+  <section class="slide" style="background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBpK9I1rY2uEG0bGmr9pTVFzLVOevqdgym3rtnY_5bmYkxvftxdgtP33wv&s=10')">
+    <div class="content">
+      <div class="slide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path><path d="M12 2v20"></path></svg>
+      </div>
+      <div class="kicker">A Regra de Fé</div>
+      <h2>A Escritura interpreta a própria Escritura.</h2>
+      <p>Não devemos interpretar uma passagem de maneira que contradiga aquilo que Deus revelou claramente em outras partes da Bíblia.</p>
+      <div class="callout"><p class="gold">Textos mais claros nos ajudam a compreender textos mais difíceis.</p></div>
+    </div>
+  </section>
+
+  <!-- Slide 10 -->
+  <section class="slide" style="background-image: url('https://opopular.com.br/image/policy:1.3274681:1777486734/image.jpg?&f=3x2')">
+    <div class="content">
+      <div class="slide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </div>
+      <div class="number">04</div>
+      <h2>Quando a discordância continua</h2>
+      <p>Devemos buscar a verdade com humildade e mansidão.</p>
+      <div class="points">
+        <div class="point"><div class="dot">·</div><span>Examinar o contexto aberto a correções.</span></div>
+        <div class="point"><div class="dot">·</div><span>Estudar os argumentos da outra parte.</span></div>
+        <div class="point"><div class="dot">·</div><span>Distinguir questões fundamentais de secundárias.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 11 -->
+  <section class="slide" style="background-image: url('https://segredosdomundo.r7.com/wp-content/uploads/2020/08/novo-testamento-como-surgiram-os-27-livros-da-segunda-parte-da-biblia-4.jpg')">
+    <div class="content">
+      <div class="slide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+      </div>
+      <div class="number">05</div>
+      <h2>Pregar diferente não é interpretar diferente.</h2>
+      <p>Dez pregadores podem apresentar sermões com introduções, ilustrações e aplicações diferentes. Isso não significa que existam dez significados.</p>
+      <div class="callout"><p class="gold">A diversidade na maneira de ensinar não é liberdade para alterar a mensagem de Deus.</p></div>
+    </div>
+  </section>
+
+  <!-- Slide 12 -->
+  <section class="slide" style="background-image: url('https://s2-galileu.glbimg.com/ts74puh6au3Lco4nCtoVAcw_ALc=/0x0:1024x640/888x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_fde5cd494fb04473a83fa5fd57ad4542/internal_photos/bs/2026/Y/R/nr5gM6QsWFGSzB7ftfTw/rotolo-di-isaia-1024x640.webp')">
+    <div class="content">
+      <div class="slide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </div>
+      <div class="kicker">Para concluir</div>
+      <h2>Examinemos tudo à luz da Palavra.</h2>
+      <p>A verdade não é determinada pela quantidade de pessoas, pela eloquência de quem prega ou pela sinceridade de quem ensina.</p>
+      <div class="quote">"Os bereanos examinavam diariamente as Escrituras para verificar o que ouviam." <br/><span class="small" style="color:var(--text-muted); font-style:normal;">(Atos 17:11)</span></div>
+    </div>
+  </section>
+
+  <!-- Slide 13 (PENÚLTIMO) -->
+  <section class="slide" style="background-image: url('https://img.magnific.com/fotos-gratis/um-antigas-biblia-ligado-um-tabela-madeira_53876-32346.jpg?semt=ais_hybrid&w=740&q=80')">
+    <div class="content">
+      <div class="slide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+      </div>
+      <div class="kicker">Nosso compromisso</div>
+      <h2 class="gold">Manejar bem a Palavra da verdade.</h2>
+      <div class="quote" style="border-left: none; padding: 0;">"Procura apresentar-te a Deus aprovado, como obreiro que não tem de que se envergonhar, que maneja bem a palavra da verdade."</div>
+      <p class="gold" style="font-weight: 700; font-size: 20px;">2 Timóteo 2:15</p>
+      <div class="rule"></div>
+      <p>Estudar com dedicação. Interpretar com responsabilidade. Ensinar com fidelidade. Caminhar com humildade.</p>
+    </div>
+  </section>
+
+  <!-- Slide 14 - TELA FINAL BRANCA E SIMPLES -->
+  <section class="slide final-slide-white">
+    <div class="content">
+      <div class="slide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+      </div>
+      <h1 class="final-title">Venha estudar a Palavra de Deus conosco!</h1>
+      <div class="final-subtitle">Escola Bíblica Dominical</div>
+      
+      <div class="final-details">
+        <div class="detail-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          Neste domingo · 9h30
+        </div>
+        <div class="detail-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          1ª Igreja Evangélica Vida
+        </div>
+        <div class="detail-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          Anápolis / GO
+        </div>
+      </div>
+      
+      <div class="btn-final">Esperamos você!</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(() => {
+  const slides = document.querySelectorAll('.slide');
+  const progressContainer = document.getElementById('progress-container');
+  let currentIndex = 0;
+
+  // Gerar barras de progresso
+  slides.forEach((slide, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'progress-bar';
+    if(slide.classList.contains('final-slide-white')) {
+        bar.classList.add('dark-mode');
+    }
+    bar.innerHTML = `<div class="progress-fill" id="fill-${i}"></div>`;
+    progressContainer.appendChild(bar);
+  });
+
+  function updateSlides(index) {
+    slides.forEach((slide, i) => {
+      slide.classList.toggle('active', i === index);
+      const fill = document.getElementById(`fill-${i}`);
+      if (i <= index) {
+        fill.style.width = '100%';
+      } else {
+        fill.style.width = '0%';
+      }
+    });
+  }
+
+  document.getElementById('tap-left').addEventListener('click', () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      updateSlides(currentIndex);
+    }
+  });
+
+  document.getElementById('tap-right').addEventListener('click', () => {
+    if (currentIndex < slides.length - 1) {
+      currentIndex++;
+      updateSlides(currentIndex);
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight', ' ', 'PageDown'].includes(e.key) && currentIndex < slides.length - 1) {
+      currentIndex++;
+      updateSlides(currentIndex);
+    } else if (['ArrowLeft', 'PageUp'].includes(e.key) && currentIndex > 0) {
+      currentIndex--;
+      updateSlides(currentIndex);
+    }
+  });
+
+  // Inicializa
+  updateSlides(0);
+})();
+</script>
+</body>
+</html>
